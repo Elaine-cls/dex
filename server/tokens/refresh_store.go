@@ -209,7 +209,11 @@ func (rt *RefreshStore) Rotate(ctx context.Context, storageToken *storage.Refres
 	}
 
 	if err := rt.storage.UpdateRefreshToken(ctx, storageToken.ID, refreshTokenUpdater); err != nil {
-		rt.logger.ErrorContext(ctx, "failed to update refresh token", "err", err)
+		// A failure resolving the identity is the caller's to log, at the level it
+		// warrants, as upstream does since it moved the call out of the transaction.
+		if idErr == nil {
+			rt.logger.ErrorContext(ctx, "failed to update refresh token", "err", err)
+		}
 		return "", ident, err
 	}
 
